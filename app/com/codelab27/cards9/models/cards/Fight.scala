@@ -11,7 +11,7 @@ import org.joda.time.DateTime
  * @param defPoints points of the defense
  * @param atkWinner true if attacker was the winner of the fight
  */
-case class Fight(
+final case class Fight(
   attacker: Card.Id,
   defender: Card.Id,
   atkPoints: Int,
@@ -20,5 +20,7 @@ case class Fight(
   dateTime: DateTime = DateTime.now)
 
 object Fight {
+
   case class Id(value: String) extends AnyVal
+
 }

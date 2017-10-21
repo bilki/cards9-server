@@ -2,7 +2,7 @@
 
 # --- !Ups
 
-CREATE TABLE card_classes (
+CREATE TABLE card_class (
   id serial primary key,
   name varchar(20),
   imgurl varchar(75)
@@ -10,4 +10,4 @@ CREATE TABLE card_classes (
 
 # --- !Downs
 
-DROP TABLE card_classes;
+DROP TABLE card_class;

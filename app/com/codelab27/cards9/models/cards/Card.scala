@@ -1,11 +1,8 @@
 package com.codelab27.cards9.models.cards
 
 import com.codelab27.cards9.models.players.Player
-
-import scala.util.Random
-import scala.math.{max, min}
-import enumeratum._
 import com.codelab27.cards9.services.settings.GameSettings
+import enumeratum._
 
 /**
  * Battle class of the card.
@@ -31,7 +28,6 @@ object BattleClass extends Enum[BattleClass] {
 /**
  * Unique card instance.
  *
- * @param id unique identifier
  * @param ownerId player identifier
  * @param cardType type of card
  * @param power offensive stat
@@ -39,16 +35,17 @@ object BattleClass extends Enum[BattleClass] {
  * @param pdef physical defense stat
  * @param mdef magical defense stat
  * @param arrows list of atk/def arrows
+ * @param id unique identifier
  */
-case class Card(
-  id: Card.Id,
+final case class Card(
   ownerId: Player.Id,
   cardType: CardClass.Id,
   power: Int,
   bclass: BattleClass,
   pdef: Int,
   mdef: Int,
-  arrows: List[Arrow])(implicit gameSettings: GameSettings) {
+  arrows: List[Arrow],
+  id: Option[Card.Id] = None)(implicit gameSettings: GameSettings) {
 
   require(power < gameSettings.CARD_MAX_LEVEL)
   require(pdef < gameSettings.CARD_MAX_LEVEL)
@@ -60,48 +57,5 @@ case class Card(
 object Card {
 
   case class Id(value: Int) extends AnyVal
-
-  /**
-    * Challenge another card.
-    *
-    * @param attacker attacking card
-    * @param defender enemy card
-    * @param side location of the enemy card
-    *
-    * @return a fight result
-    */
-  def fight(attacker: Card, defender: Card, side: Arrow)(implicit gameSettings: GameSettings): Fight = {
-    import BattleClass._
-
-    // We need an arrow pointing to the other card
-    require(attacker.arrows.contains(side))
-
-    // Fight!!
-    if (defender.arrows.contains(side.opposite)) {
-      val (atkStat, defStat) = attacker.bclass match {
-        case Physical => (attacker.power, defender.pdef)
-        case Magical  => (attacker.power, defender.mdef)
-        case Flexible => (attacker.power, min(defender.pdef, defender.mdef))
-        case Assault => (max(max(attacker.power, attacker.pdef), attacker.mdef),
-          min(min(defender.power, defender.pdef), defender.mdef))
-      }
-
-      lazy val (atkScore, defScore) = statVs(atkStat, defStat)
-
-      def hitPoints(stat: Int): Int = stat * gameSettings.CARD_MAX_LEVEL
-
-      // Battle maths
-      def statVs(atkStat: Int, defStat: Int): (Int, Int) = {
-        val p1atk = hitPoints(atkStat) + Random.nextInt(gameSettings.CARD_MAX_LEVEL)
-        val p2def = hitPoints(defStat) + Random.nextInt(gameSettings.CARD_MAX_LEVEL)
-        (p1atk - Random.nextInt(p1atk + 1), p2def - Random.nextInt(p2def + 1))
-      }
-
-      Fight(attacker.id, defender.id, atkScore, defScore, atkScore > defScore)
-    } else {
-      // Instant win
-      Fight(attacker.id, defender.id, 0, 0, true)
-    }
-  }
 
 }

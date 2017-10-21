@@ -1,14 +1,14 @@
 package com.codelab27.cards9.models
 
-import com.codelab27.cards9.services.settings.GameSettings
-import boards.{Board, BoardSettings}
-import cards._
-import cards.BattleClass._
-import org.scalacheck.Gen
 import java.net.URL
 
+import com.codelab27.cards9.game.GameEngines
+import com.codelab27.cards9.models.boards.{Board, BoardSettings}
+import com.codelab27.cards9.models.cards.BattleClass._
+import com.codelab27.cards9.models.cards._
 import com.codelab27.cards9.models.players.Player
-import org.scalacheck.Arbitrary
+import com.codelab27.cards9.services.settings.GameSettings
+import org.scalacheck.{Arbitrary, Gen}
 
 object ModelGens {
   private val urlProtocol = "http://"
@@ -18,7 +18,7 @@ object ModelGens {
     name  <- Gen.alphaStr
     img   <- Gen.alphaStr
   } yield {
-    CardClass(CardClass.Id(id), CardClass.Name(name), new URL(urlProtocol + img))
+    CardClass(CardClass.Name(name), new URL(urlProtocol + img), Some(CardClass.Id(id)))
   }
 
   private val BattleClassGenerator: Gen[BattleClass] = Gen.oneOf(Physical, Magical, Flexible, Assault)
@@ -40,7 +40,7 @@ object ModelGens {
     mdef        <- Gen.choose(0, gameSettings.CARD_MAX_LEVEL - 1)
     arrows      <- ArrowsGenerator
   } yield {
-    Card(Card.Id(id), Player.Id(ownerId), cardClass.id, power, battleClass, pdef, mdef, arrows.toList)
+    Card(Player.Id(ownerId), cardClass.id.get, power, battleClass, pdef, mdef, arrows.toList, Some(Card.Id(id)))
   }
 
   implicit def cards(implicit gameSettings: GameSettings): Arbitrary[Card] = Arbitrary(CardGenerator)
@@ -53,7 +53,7 @@ object ModelGens {
       redHand   <- HandGenerator
       blueHand  <- HandGenerator
     } yield {
-      Board.random(redHand, blueHand, boardSettings)
+      GameEngines.BoardEngine.random(redHand, blueHand, boardSettings)
     }
 
   implicit def boards(implicit boardSettings: BoardSettings, gameSettings: GameSettings): Arbitrary[Board] = {

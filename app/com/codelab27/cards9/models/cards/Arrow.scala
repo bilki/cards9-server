@@ -79,16 +79,15 @@ object Arrow extends Enum[Arrow] {
     val allArrowsAreDistinct = arrows.distinct.size == arrows.size
     val correctNumberOfArrows = arrows.size < MAX_ARROWS + 1
 
-    allArrowsAreDistinct && correctNumberOfArrows match {
-      case false  => None
-      case true   => {
-        val compressed: Byte = {
-          if (arrows.isEmpty) 0x00 // Card with no arrows...
-          else arrows.foldLeft[Byte](0x00)((total, next) => (total | next.hex).toByte)
-        }
-
-        Some(compressed)
+    if (allArrowsAreDistinct && correctNumberOfArrows) {
+      val compressed: Byte = {
+        if (arrows.isEmpty) 0x00 // Card with no arrows...
+        else arrows.foldLeft[Byte](0x00)((total, next) => (total | next.hex).toByte)
       }
+
+      Some(compressed)
+    } else {
+      None
     }
   }
 }

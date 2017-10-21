@@ -5,17 +5,19 @@ import java.net.URL
 /**
  * Card class.
  *
- * @param id unique identifier of this card class
  * @param name card name
  * @param img url of the image for this card
+ * @param id unique identifier of this card class
  */
-case class CardClass(
-  id: CardClass.Id,
+final case class CardClass(
   name: CardClass.Name,
-  img: URL)
+  img: URL,
+  id: Option[CardClass.Id] = None)
 
 object CardClass {
+
   case class Id(value: Int) extends AnyVal
 
   case class Name(value: String) extends AnyVal
+
 }
