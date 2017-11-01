@@ -5,8 +5,16 @@ version := "0.1"
 lazy val cards9 = (project in file("."))
   .enablePlugins(PlayScala)
   .disablePlugins(PlayFilters)
+  .configs(IntegrationTest)
+  .settings(
+    Defaults.itSettings
+  )
 
-scalaVersion := "2.12.3"
+scalaSource in IntegrationTest := baseDirectory.value / "it"
+
+resourceDirectory in IntegrationTest := baseDirectory.value / "it/resources"
+
+scalaVersion := "2.12.4"
 
 scalacOptions ++= Seq(
   "-unchecked",
@@ -40,13 +48,15 @@ libraryDependencies ++= Seq(
     "org.postgresql" % "postgresql" % "42.1.4",
     "com.h2database" % "h2" % "1.4.196",
     "org.scalactic" %% "scalactic" % "3.0.4",
-    "org.scalatest" %% "scalatest" % "3.0.4" % "test",
-    "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
+    "org.scalatest" %% "scalatest" % "3.0.4" % "it,test",
+    "org.scalacheck" %% "scalacheck" % "1.13.4" % "it,test",
     "com.beachape" %% "enumeratum" % "1.5.12",
     "org.typelevel" %% "cats-core" % "1.0.0-MF"
 )
 
 fork in run := true
+
+fork in test := false
 
 packageName in Docker := packageName.value
 
