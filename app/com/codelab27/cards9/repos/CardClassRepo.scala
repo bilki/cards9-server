@@ -4,10 +4,10 @@ import com.codelab27.cards9.models.cards.CardClass
 
 trait CardClassRepo[F[_]] {
 
-  def findCardClass(id: CardClass.Id): F[Option[CardClass]]
+  def findCardClass(id: Option[CardClass.Id]): F[Option[CardClass]]
 
-  def storeCardClass(cardClass: CardClass): F[CardClass.Id]
+  def storeCardClass(cardClass: CardClass): F[Option[CardClass.Id]]
 
-  def deleteCardClass(id: CardClass.Id): F[Unit]
+  def deleteCardClass(id: Option[CardClass.Id]): F[Option[CardClass]]
 
 }

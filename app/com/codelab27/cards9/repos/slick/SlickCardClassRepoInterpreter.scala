@@ -8,13 +8,16 @@ import com.codelab27.cards9.repos.CardClassRepo
 import slick.dbio.{DBIO => SlickDBIO}
 import slick.jdbc.{H2Profile, JdbcProfile}
 
-trait SlickCardClassRepoInterpreter extends CardClassRepo[SlickDBIO] {
+import scala.concurrent.ExecutionContext.Implicits.global
 
-  protected val profile: JdbcProfile
+abstract class SlickCardClassRepoInterpreter(val profile: JdbcProfile) extends CardClassRepo[SlickDBIO] {
 
   import profile.api._
 
-  protected def db[T](ctx: T): Database
+  protected val driver: String
+
+  def db: Database = Database
+    .forURL("jdbc:h2:mem:play;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=FALSE", driver = driver)
 
   implicit def cardClassId = MappedColumnType.base[CardClass.Id, Int](_.value, CardClass.Id.apply)
 
@@ -25,16 +28,21 @@ trait SlickCardClassRepoInterpreter extends CardClassRepo[SlickDBIO] {
 
   private def cardClasses = TableQuery[CardClassTable]
 
-  override def findCardClass(id: CardClass.Id): DBIO[Option[CardClass]] = {
+  override def findCardClass(id: Option[CardClass.Id]): DBIO[Option[CardClass]] = {
     cardClasses.filter(_.id === id).result.headOption
   }
 
-  override def storeCardClass(cardClass: CardClass): DBIO[CardClass.Id] = {
-    cardClasses returning cardClasses.map(_.id) += cardClass
+  override def storeCardClass(cardClass: CardClass): DBIO[Option[CardClass.Id]] = {
+    cardClasses returning cardClasses.map(_.id) insertOrUpdate(cardClass)
   }
 
-  override def deleteCardClass(id: CardClass.Id): DBIO[Unit] = {
-    cardClasses.filter(_.id === id).delete >> DBIO.successful(())
+  override def deleteCardClass(id: Option[CardClass.Id]): DBIO[Option[CardClass]] = {
+    (for {
+      cardClass <- findCardClass(id)
+      _         <- cardClasses.filter(_.id === id).delete
+    } yield {
+      cardClass
+    }).transactionally
   }
 
   def createTable: DBIO[Unit] = cardClasses.schema.create
@@ -51,12 +59,6 @@ trait SlickCardClassRepoInterpreter extends CardClassRepo[SlickDBIO] {
   }
 }
 
-object H2CardClassRepoInterpreter extends SlickCardClassRepoInterpreter {
-
-  override val profile = H2Profile
-
-  import profile.backend.Database
-
-  override def db[T](ctx: T) = Database.forURL(ctx.toString, driver = "org.h2.Driver")
-
+object H2CardClassRepoInterpreter extends SlickCardClassRepoInterpreter(H2Profile) {
+  override protected val driver = "org.h2.Driver"
 }
